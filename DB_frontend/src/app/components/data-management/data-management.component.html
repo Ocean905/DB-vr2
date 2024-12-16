@@ -1,0 +1,228 @@
+<div class="container">
+  <h1>碳排係數管理</h1>
+  
+  <!-- 表格选择器 -->
+  <div class="table-selector">
+    <button [class.active]="selectedTable === 'invoice_transactions'" 
+            (click)="selectTable('invoice_transactions')">
+      品項管理
+    </button>
+    <button [class.active]="selectedTable === 'invoice_transtions_categories'" 
+            (click)="selectTable('invoice_transtions_categories')">
+      類別管理
+    </button>
+    <button [class.active]="selectedTable === 'HSR'" 
+            (click)="selectTable('HSR')">
+      高鐵站別管理
+    </button>
+  </div>
+
+  <!-- 添加按钮 -->
+  <button class="add-btn" (click)="showModal = true">新增</button>
+
+  <!-- 数据表格 -->
+  <div class="table-container">
+    <!-- 发票交易表格 -->
+    <table *ngIf="selectedTable === 'invoice_transactions'">
+      <thead>
+        <tr>
+          <th class="name-col">名稱</th>
+          <th class="unit-col">單位</th>
+          <th class="coefficient-col">係數</th>
+          <th class="category-col">類別</th>
+          <th class="source-col">來源</th>
+          <th class="source-name-col">來源名稱</th>
+          <th class="actions-col">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of transactions">
+          <td class="name-col">{{item.name}}</td>
+          <td class="unit-col">{{item.unit}}</td>
+          <td class="coefficient-col">{{item.coefficient}}</td>
+          <td class="category-col">{{item.category}}</td>
+          <td class="source-col">{{item.source}}</td>
+          <td class="source-name-col">{{item.source_name}}</td>
+          <td class="actions-col">
+            <button (click)="editItem(item)">編輯</button>
+            <button (click)="deleteItem(item.id)">刪除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 交易类别表格 -->
+    <table *ngIf="selectedTable === 'invoice_transtions_categories'">
+      <thead>
+        <tr>
+          <th>名稱</th>
+          <th>父類別</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let category of categories">
+          <td>{{category.name}}</td>
+          <td>{{category.parent}}</td>
+          <td>
+            <button (click)="editItem(category)">編輯</button>
+            <button (click)="deleteItem(category.id)">刪除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 高铁站点表格 -->
+    <table *ngIf="selectedTable === 'HSR'">
+      <thead>
+        <tr>
+          <th>起點</th>
+          <th>終點</th>
+          <th>碳足跡</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let station of hsrStations">
+          <td>{{station.origin}}</td>
+          <td>{{station.destination}}</td>
+          <td>{{station.carbonFootprint}}</td>
+          <td>
+            <button (click)="editItem(station)">編輯</button>
+            <button (click)="deleteItem(station.id)">刪除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 编辑/添加模态框 -->
+  <div class="modal" *ngIf="showModal">
+    <div class="modal-content">
+      <h2>{{editingItem ? '編輯' : '新增'}}記錄</h2>
+      <form (ngSubmit)="saveItem()" #form="ngForm">
+        <!-- 发票交易表单 -->
+        <div *ngIf="selectedTable === 'invoice_transactions'">
+          <div class="form-group">
+            <input [(ngModel)]="editingTransaction.name" 
+                   name="name" 
+                   placeholder="名稱" 
+                   required
+                   #name="ngModel">
+            <div class="error-tip" *ngIf="name.invalid && (name.dirty || name.touched)">
+              請輸入名稱
+            </div>
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingTransaction.unit" 
+                   name="unit" 
+                   placeholder="單位" 
+                   required
+                   #unit="ngModel">
+            <div class="error-tip" *ngIf="unit.invalid && (unit.dirty || unit.touched)">
+              請輸入單位
+            </div>
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingTransaction.coefficient" 
+                   name="coefficient" 
+                   type="number" 
+                   placeholder="係數" 
+                   required
+                   #coefficient="ngModel">
+            <div class="error-tip" *ngIf="coefficient.invalid && (coefficient.dirty || coefficient.touched)">
+              請輸入係數
+            </div>
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingTransaction.category" 
+                   name="category" 
+                   placeholder="類別">
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingTransaction.source" 
+                   name="source" 
+                   placeholder="來源">
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingTransaction.source_name" 
+                   name="source_name" 
+                   placeholder="來源名稱">
+          </div>
+        </div>
+
+        <!-- 交易类别表单 -->
+        <div *ngIf="selectedTable === 'invoice_transtions_categories'">
+          <div class="form-group">
+            <input [(ngModel)]="editingCategory.name" 
+                   name="name" 
+                   placeholder="名稱">
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingCategory.parent" 
+                   name="parent" 
+                   placeholder="父類別" 
+                   required
+                   #parent="ngModel">
+            <div class="error-tip" *ngIf="parent.invalid && (parent.dirty || parent.touched)">
+              請輸入父類別
+            </div>
+          </div>
+        </div>
+
+        <!-- 高铁站点表单 -->
+        <div *ngIf="selectedTable === 'HSR'">
+          <div class="form-group">
+            <input [(ngModel)]="editingHSR.origin" 
+                   name="origin" 
+                   placeholder="起點" 
+                   required
+                   #origin="ngModel">
+            <div class="error-tip" *ngIf="origin.invalid && (origin.dirty || origin.touched)">
+              請輸入起點
+            </div>
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingHSR.destination" 
+                   name="destination" 
+                   placeholder="終點" 
+                   required
+                   #destination="ngModel">
+            <div class="error-tip" *ngIf="destination.invalid && (destination.dirty || destination.touched)">
+              請輸入終點
+            </div>
+          </div>
+
+          <div class="form-group">
+            <input [(ngModel)]="editingHSR.carbonFootprint" 
+                   name="carbonFootprint" 
+                   type="number" 
+                   placeholder="碳足跡" 
+                   required
+                   #carbonFootprint="ngModel">
+            <div class="error-tip" *ngIf="carbonFootprint.invalid && (carbonFootprint.dirty || carbonFootprint.touched)">
+              請輸入碳足跡
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-buttons">
+          <button type="submit" [disabled]="!form.valid">儲存</button>
+          <button type="button" (click)="showModal = false">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 错误提示 -->
+  <div class="error-message" *ngIf="errorMessage">
+    {{errorMessage}}
+  </div>
+</div>
